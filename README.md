@@ -2,6 +2,10 @@
 
 This extension turns **off** the `Search` toggle on `https://chat.deepseek.com` during page start/refresh.
 
+## Install (from chrome web store)
+
+Published on [Chrome web store](https://chromewebstore.google.com/detail/bnhdipampgnpfkkmpplmkdpjdfjahjpn?utm_source=item-share-cb).
+
 ## Install (unpacked)
 
 1. Open `chrome://extensions`
