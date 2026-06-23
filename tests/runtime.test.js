@@ -4,12 +4,28 @@ const path = require("node:path");
 const vm = require("node:vm");
 
 class ToggleElement {
-  constructor(text, classNames = []) {
+  constructor(text, classNames = [], attributes = {}) {
     this.textContent = text;
     this.clickCount = 0;
+    this.isConnected = true;
+    this.attributes = attributes;
+    this.className = classNames.join(" ");
     this.classList = {
       contains: (className) => classNames.includes(className),
     };
+  }
+
+  closest() {
+    return this;
+  }
+
+  getAttribute(name) {
+    if (name === "class") return this.className;
+    return this.attributes[name] ?? null;
+  }
+
+  getBoundingClientRect() {
+    return { width: 100, height: 32 };
   }
 
   click() {
@@ -23,11 +39,14 @@ function loadRuntime({ elements = [], storageError = null, storageValue = true }
     clearInterval,
     console,
     document: {
+      body: {},
       readyState: "loading",
       addEventListener: (eventName, handler) => listeners.set(eventName, handler),
       querySelectorAll: () => elements,
     },
+    requestAnimationFrame: (callback) => callback(),
     setInterval,
+    setTimeout,
     chrome: {
       runtime: { lastError: storageError },
       storage: {
@@ -62,6 +81,28 @@ async function run() {
   context = loadRuntime({ elements: [unselectedToggle] });
   assert.equal(context.DeepSeekSearchToggleRuntime.tryDisable(), false);
   assert.equal(unselectedToggle.clickCount, 0);
+
+  const ariaSelectedToggle = new ToggleElement("", [], {
+    "aria-label": "Search",
+    "aria-pressed": "true",
+  });
+  context = loadRuntime({ elements: [ariaSelectedToggle] });
+  assert.equal(context.DeepSeekSearchToggleRuntime.tryDisable(), true);
+  assert.equal(ariaSelectedToggle.clickCount, 1);
+
+  const dataStateSelectedToggle = new ToggleElement("联网搜索", [], {
+    "data-state": "checked",
+  });
+  context = loadRuntime({ elements: [dataStateSelectedToggle] });
+  assert.equal(context.DeepSeekSearchToggleRuntime.tryDisable(), true);
+  assert.equal(dataStateSelectedToggle.clickCount, 1);
+
+  const inactiveChineseToggle = new ToggleElement("网络搜索", [], {
+    "aria-pressed": "false",
+  });
+  context = loadRuntime({ elements: [inactiveChineseToggle] });
+  assert.equal(context.DeepSeekSearchToggleRuntime.tryDisable(), false);
+  assert.equal(inactiveChineseToggle.clickCount, 0);
 
   const uploadToggle = new ToggleElement("Upload");
   context = loadRuntime({ elements: [uploadToggle] });
