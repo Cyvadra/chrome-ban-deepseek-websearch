@@ -45,3 +45,11 @@ Optional: patch an existing zip and write a cleaned output zip:
 ```bash
 ./scripts/patch-cws-zip.sh --input-zip ./my-extension.zip --output-zip ./dist/upload.zip
 ```
+
+## Tests
+
+Run the focused runtime and packaging tests:
+
+```bash
+./tests/run.sh
+```

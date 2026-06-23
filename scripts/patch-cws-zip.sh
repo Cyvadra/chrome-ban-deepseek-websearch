@@ -6,6 +6,18 @@ INPUT_ZIP=""
 OUTPUT_ZIP="$ROOT_DIR/dist/chrome-web-store-upload.zip"
 VERSION_OVERRIDE=""
 
+absolute_path() {
+  local path="$1"
+  local dir
+  local base
+
+  dir="$(dirname "$path")"
+  base="$(basename "$path")"
+  mkdir -p "$dir"
+  dir="$(cd "$dir" && pwd)"
+  printf '%s/%s\n' "$dir" "$base"
+}
+
 usage() {
   cat <<'EOF'
 Patch/package a Chrome extension ZIP for Chrome Web Store upload.
@@ -69,6 +81,11 @@ if [[ -n "$VERSION_OVERRIDE" ]]; then
   fi
 fi
 
+if [[ -n "$INPUT_ZIP" ]]; then
+  INPUT_ZIP="$(absolute_path "$INPUT_ZIP")"
+fi
+OUTPUT_ZIP="$(absolute_path "$OUTPUT_ZIP")"
+
 STAGING_DIR="$(mktemp -d)"
 cleanup() {
   rm -rf "$STAGING_DIR"
@@ -85,6 +102,7 @@ else
     --exclude '.venv/' \
     --exclude 'dist/' \
     --exclude 'scripts/' \
+    --exclude 'tests/' \
     --exclude '__MACOSX/' \
     --exclude '.DS_Store' \
     --exclude '*.md' \
@@ -97,12 +115,12 @@ fi
 if [[ ! -f "$STAGING_DIR/manifest.json" ]]; then
   shopt -s dotglob nullglob
   entries=("$STAGING_DIR"/*)
-  shopt -u dotglob nullglob
   if [[ ${#entries[@]} -eq 1 && -d "${entries[0]}" && -f "${entries[0]}/manifest.json" ]]; then
     TOP_DIR="${entries[0]}"
     mv "$TOP_DIR"/* "$STAGING_DIR"/
     rmdir "$TOP_DIR"
   fi
+  shopt -u dotglob nullglob
 fi
 
 if [[ ! -f "$STAGING_DIR/manifest.json" ]]; then
@@ -117,7 +135,6 @@ fi
 find "$STAGING_DIR" -name '.DS_Store' -delete
 find "$STAGING_DIR" -name '__MACOSX' -type d -prune -exec rm -rf {} +
 
-mkdir -p "$(dirname "$OUTPUT_ZIP")"
 (
   cd "$STAGING_DIR"
   rm -f "$OUTPUT_ZIP"

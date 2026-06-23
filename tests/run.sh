@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+node "$ROOT_DIR/tests/runtime.test.js"
+bash "$ROOT_DIR/tests/package.test.sh"
