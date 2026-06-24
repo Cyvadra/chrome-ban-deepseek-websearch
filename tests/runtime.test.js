@@ -35,9 +35,18 @@ class ToggleElement {
 
 function loadRuntime({ elements = [], storageError = null, storageValue = true } = {}) {
   const listeners = new Map();
+  const globalListeners = new Map();
+  let mutationObserverCreations = 0;
   const context = {
     clearInterval,
     console,
+    MutationObserver: class {
+      constructor() {
+        mutationObserverCreations += 1;
+      }
+
+      observe() {}
+    },
     document: {
       body: {},
       readyState: "loading",
@@ -47,6 +56,7 @@ function loadRuntime({ elements = [], storageError = null, storageValue = true }
     requestAnimationFrame: (callback) => callback(),
     setInterval,
     setTimeout,
+    addEventListener: (eventName, handler) => globalListeners.set(eventName, handler),
     chrome: {
       runtime: { lastError: storageError },
       storage: {
@@ -65,6 +75,10 @@ function loadRuntime({ elements = [], storageError = null, storageValue = true }
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(path.join(rootDir, "constants.js"), "utf8"), context);
   vm.runInContext(fs.readFileSync(path.join(rootDir, "content.js"), "utf8"), context);
+
+  context.__listeners = listeners;
+  context.__globalListeners = globalListeners;
+  context.__mutationObserverCreations = () => mutationObserverCreations;
 
   return context;
 }
@@ -120,6 +134,11 @@ async function run() {
 
   context = loadRuntime({ storageError: { message: "sync unavailable" } });
   assert.equal(await context.DeepSeekSearchToggleRuntime.isFeatureEnabled(), false);
+
+  context = loadRuntime();
+  assert.equal(context.__listeners.has("visibilitychange"), false);
+  assert.equal(context.__globalListeners.has("focus"), false);
+  assert.equal(context.__mutationObserverCreations(), 0);
 }
 
 run().then(

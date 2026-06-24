@@ -26,10 +26,10 @@ printf 'metadata' > "$TMP_DIR/source/extension/.hidden"
 scripts/patch-cws-zip.sh \
   --input-zip "$TMP_DIR/input.zip" \
   --output-zip "$TMP_DIR/patched/upload.zip" \
-  --version 1.0.1 >/dev/null
+  --version 1.0.2 >/dev/null
 
 test -f "$TMP_DIR/patched/upload.zip"
-unzip -p "$TMP_DIR/patched/upload.zip" manifest.json | awk '/"version": "1.0.1"/ { found = 1 } END { exit !found }'
+unzip -p "$TMP_DIR/patched/upload.zip" manifest.json | awk '/"version": "1.0.2"/ { found = 1 } END { exit !found }'
 unzip -Z1 "$TMP_DIR/patched/upload.zip" | awk '$0 == ".hidden" { found = 1 } END { exit !found }'
 popd >/dev/null
 

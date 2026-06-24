@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Disable DeepSeek Web Search",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Turns off DeepSeek Search toggle automatically on page load.",
   "permissions": ["storage"],
   "icons": {

@@ -17,9 +17,6 @@
     "true",
   ]);
 
-  let observer = null;
-  let scheduled = false;
-
   function normalize(value) {
     return String(value || "").trim();
   }
@@ -130,33 +127,6 @@
     }, POLL_INTERVAL_MS);
   }
 
-  function scheduleDisable() {
-    if (scheduled) return;
-    scheduled = true;
-
-    const run = () => {
-      scheduled = false;
-      tryDisable();
-    };
-
-    if (globalThis.requestAnimationFrame) {
-      globalThis.requestAnimationFrame(run);
-    } else {
-      globalThis.setTimeout(run, 0);
-    }
-  }
-
-  function observeChanges() {
-    if (observer || !document.body || !globalThis.MutationObserver) return;
-
-    observer = new MutationObserver(scheduleDisable);
-    observer.observe(document.body, {
-      attributes: true,
-      childList: true,
-      subtree: true,
-    });
-  }
-
   function isFeatureEnabled() {
     return new Promise((resolve) => {
       if (!chrome?.storage?.sync) {
@@ -173,9 +143,6 @@
   async function main() {
     if (!(await isFeatureEnabled())) return;
     poll();
-    observeChanges();
-    document.addEventListener("visibilitychange", scheduleDisable);
-    globalThis.addEventListener?.("focus", scheduleDisable);
   }
 
   globalThis.DeepSeekSearchToggleRuntime = Object.freeze({
